@@ -1,0 +1,11 @@
+cmake_minimum_required(VERSION 3.1)
+
+set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_CXX_STANDARD 11)
+
+file(GLOB_RECURSE RIDGE_SURFACES_SOURCES  "marching_cubes/*.*" "RidgeSurfaces.cpp")
+
+add_project (RidgeLines            RidgeLines.cpp)
+add_project (TimeScaleMethod2D     TimeScaleMethod2D.cpp)
+add_project (RidgeSurfaces         ${RIDGE_SURFACES_SOURCES})
+add_project (TimeScaleMethod3D     TimeScaleMethod3D.cpp)

@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.1)
+
+set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_CXX_STANDARD 11)
+
+add_project(LagrangianEulerian2D    LagrangianEulerian2D.cpp)
+add_project(LagrangianEulerian3D    LagrangianEulerian3D.cpp)
