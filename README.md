@@ -12,6 +12,6 @@ This project requires following third-party open source libraries:
 
 In addition, the compilation of some examples requires NetCDF: https://www.unidata.ucar.edu/software/netcdf/
 
-The test files included in the library use some reference datasets that have been used in publications. These datasets include 2D and 3D time-dependent CFD datasets along with a diffusion MRI dataset. They can be downloaded from [this ftp server](ftp://ftp.cs.purdue.edu/pub/zdvis/datasets/). 
+The test files included in the library use some reference datasets that have been used in publications. These datasets include 2D and 3D time-dependent CFD datasets along with a diffusion MRI dataset. They can be downloaded from ftp://ftp.cs.purdue.edu/pub/zdvis/datasets/. 
 
 This work was supported in part by NSF OCI CAREER award 1150000 *"Efficient Structural Analysis of Multivariate Fields for Scalable Visualization"* (Xavier Tricoche, PI)
