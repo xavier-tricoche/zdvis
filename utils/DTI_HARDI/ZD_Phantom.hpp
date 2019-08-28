@@ -18,8 +18,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 **************************************************************************/
-//#include "ZD_DTI.hpp"
-//#include "ZD_HOT.hpp"
 #ifndef _ZD_LIB_PHANTOM_HPP_
 #define _ZD_LIB_PHANTOM_HPP_
 
@@ -61,8 +59,7 @@ namespace ZD {
         CPoint<T, 3> **m_tangents;        // tangents
 
     public:
-        CPhantom();
-        CPhantom(const ZD_DWI_MODE mode);
+        CPhantom(const ZD_DWI_MODE mode = ZD_DWI_NONE);
         ~CPhantom();
     protected:
         virtual inline const bool Init(const ZD_DWI_MODE mode);
@@ -167,12 +164,6 @@ namespace ZD {
 
     };
 } // namespace ZD
-
-template<typename T>
-ZD::CPhantom<T>::CPhantom()
-{
-    CPhantom(ZD_DWI_NONE);
-}
 
 template<typename T>
 ZD::CPhantom<T>::CPhantom(const ZD_DWI_MODE mode)

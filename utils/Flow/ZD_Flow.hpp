@@ -83,7 +83,6 @@ inline const T ZD::CFlow<T, N>::NextTime(point_type& p, const value_type startTi
     value_type integratedTime = 0.0;
     while (integratedTime < time) {
         if (CheckPosition(p) == false) {
-            // std::cout << "check position at " << p[0] << " " << p[1] << " " << p[2] << " failed\n";
             break;
         }
         try {
@@ -130,7 +129,6 @@ inline const T ZD::CFlow<T, N>::NextTime(point_type& p, const value_type startTi
     while (integratedTime < time) {
         if (CheckPosition(p) == false)
             break;
-        //T temp = Next(p, startTime + integratedTime, time - integratedTime, direction);
         value_type temp = integrator->Next(p, startTime + integratedTime*direction, direction, this);
         integratedTime += temp;
         if (integratedTime > time) {

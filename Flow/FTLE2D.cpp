@@ -84,12 +84,6 @@ int main(int argc, char *argv[])
                 buffer[i] = pFlowMap->GetValue(x + ZD::neighbors_D2N9[i][0], y + ZD::neighbors_D2N9[i][1]);
             }
             ftle->SetValue(x, y, ZD::CPoint<DATA_TYPE, 1>(ZD::CFTLETool<DATA_TYPE, 2>::ComputeFTLE_D2N9(buffer, dt, dis)));
-
-            //ZD::CPoint<DATA_TYPE, 2> buffer[4];
-            //for (int i = 0; i < 4; ++i) {
-            //    buffer[i] = pFlowMap->GetValue(x + ZD::neighbors_D2N4[i][0], y + ZD::neighbors_D2N4[i][1]);
-            //}
-            //ftle->SetValue(x-1, y-1, ZD::CPoint<DATA_TYPE, 1>(ZD::CFTLETool<DATA_TYPE, 2>::ComputeFTLE_D2N4(buffer, dt, dis)));
         }
     }
 

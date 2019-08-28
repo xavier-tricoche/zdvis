@@ -27,7 +27,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <limits>
 
-
 #include <teem/hest.h>
 
 #ifndef DATA_TYPE
