@@ -49,29 +49,36 @@ namespace ZD {
         value_type m_maxTime;
 
     public:
-        CFlowGaussianVortices(const value_type minTime, const value_type maxTime, const char *scalarName = nullptr);
+        CFlowGaussianVortices(const value_type minTime, 
+                              const value_type maxTime, 
+                              const char *scalarName = nullptr);
         ~CFlowGaussianVortices();
 
     protected:
-        virtual inline CIntegrator<T, 2> *CreateIntegrator() const;
+        virtual CIntegrator<T, 2> *CreateIntegrator() const;
 
     public:
-        virtual inline const point_type Velocity(const point_type& p, const value_type& time) const;
-        virtual inline const value_type Scalar(const point_type& p, const value_type& time) const;
-        virtual inline const bool CheckPosition(const point_type& p) const;
-        virtual inline void GetBBox(point_type& min, point_type& max) const;
+        virtual const point_type Velocity(const point_type& p,
+                                          const value_type& time) const;
+        virtual const value_type Scalar(const point_type& p, 
+                                        const value_type& time) const;
+        virtual const bool CheckPosition(const point_type& p) const;
+        virtual void GetBBox(point_type& min, point_type& max) const;
 
     private:
         bool ReadTimeFile();
-        bool ReadGerrisOutput(const value_type minTime, const value_type maxTime, const char *scalarName);
+        bool ReadGerrisOutput(const value_type minTime, 
+                              const value_type maxTime, 
+                              const char *scalarName);
 
         inline void TimeToIndex(const T time, int *indices) const;
-
     };
 }
 
 template <typename T>
-ZD::CFlowGaussianVortices<T>::CFlowGaussianVortices(const value_type minTime, const value_type maxTime, const char *scalarName)
+ZD::CFlowGaussianVortices<T>::
+CFlowGaussianVortices(const value_type minTime, const value_type maxTime, 
+                      const char *scalarName)
 {
     this->m_pDatasets = nullptr;
     this->m_pTimes = nullptr;
@@ -97,7 +104,8 @@ ZD::CFlowGaussianVortices<T>::~CFlowGaussianVortices()
 }
 
 template <typename T>
-inline const bool ZD::CFlowGaussianVortices<T>::CheckPosition(const point_type& p) const
+inline const bool 
+ZD::CFlowGaussianVortices<T>::CheckPosition(const point_type& p) const
 {
     if (p[0] > m_boundingBox[0] && p[0] < m_boundingBox[1] &&
         p[1] > m_boundingBox[2] && p[1] < m_boundingBox[3])
@@ -107,17 +115,21 @@ inline const bool ZD::CFlowGaussianVortices<T>::CheckPosition(const point_type& 
 }
 
 template <typename T>
-inline ZD::CIntegrator<T, 2> * ZD::CFlowGaussianVortices<T>::CreateIntegrator() const
+inline ZD::CIntegrator<T, 2> * ZD::
+CFlowGaussianVortices<T>::CreateIntegrator() const
 {
     return new CIntegratorRK4<T, 2>(this->m_stepSize);
 }
 
 template <typename T>
-inline const ZD::CPoint<T, 2> ZD::CFlowGaussianVortices<T>::Velocity(const point_type& p, const value_type& time) const
+inline const ZD::CPoint<T, 2> 
+ZD::CFlowGaussianVortices<T>::Velocity(const point_type& p, 
+                                       const value_type& time) const
 {
     int indices[2];
     TimeToIndex(time, indices);
-    value_type f = (time - m_pTimes[indices[0]]) / (m_pTimes[indices[1]] - m_pTimes[indices[0]]);
+    value_type f = (time - m_pTimes[indices[0]]) / 
+                   (m_pTimes[indices[1]] - m_pTimes[indices[0]]);
 
     point_type v0 = this->m_pDatasets[indices[0]].GetVelocity(p);
     point_type v1 = this->m_pDatasets[indices[1]].GetVelocity(p);
@@ -127,7 +139,9 @@ inline const ZD::CPoint<T, 2> ZD::CFlowGaussianVortices<T>::Velocity(const point
 }
 
 template <typename T>
-inline const T ZD::CFlowGaussianVortices<T>::Scalar(const point_type& p, const value_type& time) const
+inline const T 
+ZD::CFlowGaussianVortices<T>::
+Scalar(const point_type& p, const value_type& time) const
 {
     int indices[2];
     TimeToIndex(time, indices);
@@ -165,7 +179,9 @@ bool ZD::CFlowGaussianVortices<T>::ReadTimeFile()
 }
 
 template <typename T>
-bool ZD::CFlowGaussianVortices<T>::ReadGerrisOutput(const value_type minTime, const value_type maxTime, const char *scalarName)
+bool ZD::CFlowGaussianVortices<T>::
+ReadGerrisOutput(const value_type minTime, const value_type maxTime,
+                 const char *scalarName)
 {
     assert(this->m_pDatasets == nullptr);
 
@@ -198,7 +214,8 @@ bool ZD::CFlowGaussianVortices<T>::ReadGerrisOutput(const value_type minTime, co
 }
 
 template <typename T>
-inline void ZD::CFlowGaussianVortices<T>::TimeToIndex(const value_type time, int *indices) const
+inline void ZD::CFlowGaussianVortices<T>::
+TimeToIndex(const value_type time, int *indices) const
 {
     indices[0] = 0;
     indices[1] = GAUSSIAN_VORTICES_TOTAL_COUNT - 1;
@@ -214,7 +231,8 @@ inline void ZD::CFlowGaussianVortices<T>::TimeToIndex(const value_type time, int
 }
 
 template<typename T>
-inline void ZD::CFlowGaussianVortices<T>::GetBBox(point_type& min, point_type& max) const
+inline void ZD::CFlowGaussianVortices<T>::
+GetBBox(point_type& min, point_type& max) const
 {
     min[0] = m_boundingBox[0];
     min[1] = m_boundingBox[2];

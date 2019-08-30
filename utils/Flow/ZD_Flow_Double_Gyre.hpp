@@ -18,12 +18,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 **************************************************************************/
+
 #ifndef _ZD_LIB_FLOW_DOUBLE_GYRE_HPP_
 #define _ZD_LIB_FLOW_DOUBLE_GYRE_HPP_
 
 #include "ZD_Flow.hpp"
 #include "utils/define.hpp"
-#include "utils/Integrator/ZD_Integrator_RK4.hpp"
+#include "utils/Integrator/ZD_Integrator_RKDP45.hpp"
 
 #include <math.h>
 
@@ -43,40 +44,50 @@ namespace ZD {
         CFlowDoubleGyre(const value_type A, const value_type e, const value_type w);
 
     protected:
-        virtual inline CIntegrator<T, 2> *CreateIntegrator() const;
+        virtual CIntegrator<T, 2> *CreateIntegrator() const;
 
     public:
-        virtual inline const point_type Velocity(const point_type& p, const value_type& _time) const;
-        virtual inline const value_type Scalar(const point_type& p, const value_type& _time) const;
-        virtual inline const bool CheckPosition(const point_type& p) const;
-        virtual inline void GetBBox(point_type& min, point_type& max) const;
+        virtual const point_type Velocity(const point_type& p, 
+                                          const value_type& _time) const;
+        virtual const value_type Scalar(const point_type& p, 
+                                        const value_type& _time) const;
+        virtual const bool CheckPosition(const point_type& p) const;
+        virtual void GetBBox(point_type& min, point_type& max) const;
     };
 } // namespace ZD
 
 template<typename T>
-inline ZD::CFlowDoubleGyre<T>::CFlowDoubleGyre() : m_A(0.1), m_e(0.25), m_w(0.6283185307179586476925286766559)
+inline ZD::CFlowDoubleGyre<T>::
+CFlowDoubleGyre() 
+    : m_A(0.1), m_e(0.25), m_w(0.6283185307179586476925286766559)
 {
 }
 
 template<typename T>
-ZD::CFlowDoubleGyre<T>::CFlowDoubleGyre(const value_type A, const value_type e, const value_type w) : m_A(A), m_e(e), m_w(w)
+ZD::CFlowDoubleGyre<T>::
+CFlowDoubleGyre(const value_type A, const value_type e, const value_type w)
+    : m_A(A), m_e(e), m_w(w)
 {
 }
 
 template<typename T>
-inline const bool ZD::CFlowDoubleGyre<T>::CheckPosition(const point_type& p) const
+inline const bool ZD::CFlowDoubleGyre<T>::
+CheckPosition(const point_type& p) const
 {
     return true;
 }
 
 template<typename T>
-inline ZD::CIntegrator<T, 2> * ZD::CFlowDoubleGyre<T>::CreateIntegrator() const
+inline ZD::CIntegrator<T, 2> * 
+ZD::CFlowDoubleGyre<T>::CreateIntegrator() const
 {
-    return new CIntegratorRK4<T, 2>(this->m_stepSize);
+    return new CIntegratorRKDP45<T, 2>(1.0e-6, this->m_stepSize);
 }
 
 template<typename T>
-inline const ZD::CPoint<T, 2> ZD::CFlowDoubleGyre<T>::Velocity(const point_type& p, const value_type & _time) const
+inline const ZD::CPoint<T, 2> 
+ZD::CFlowDoubleGyre<T>::
+Velocity(const point_type& p, const value_type & _time) const
 {
     const value_type& x = p[0];
     const value_type& y = p[1];
@@ -94,7 +105,9 @@ inline const ZD::CPoint<T, 2> ZD::CFlowDoubleGyre<T>::Velocity(const point_type&
 }
 
 template<typename T>
-inline const T ZD::CFlowDoubleGyre<T>::Scalar(const point_type& p, const value_type & _time) const
+inline const T 
+ZD::CFlowDoubleGyre<T>::
+Scalar(const point_type& p, const value_type & _time) const
 {
     const value_type x = p[0];
     const value_type y = p[1];
@@ -117,7 +130,8 @@ inline const T ZD::CFlowDoubleGyre<T>::Scalar(const point_type& p, const value_t
 }
 
 template<typename T>
-inline void ZD::CFlowDoubleGyre<T>::GetBBox(point_type& min, point_type& max) const
+inline void ZD::CFlowDoubleGyre<T>::
+GetBBox(point_type& min, point_type& max) const
 {
     min[0] = 0.0;
     min[1] = 0.0;

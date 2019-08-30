@@ -47,21 +47,35 @@ namespace ZD {
         virtual ~CFlow() {}
 
     public:
-        inline const value_type NextTime(point_type& p, const value_type startTime, const value_type time, const value_type direction) const;
-        inline const value_type NextTime(point_type& p, const value_type startTime, const value_type time,
-            const value_type direction, std::vector<point_type>& buffer) const;
-        inline const value_type NextTime(point_type& p, const value_type startTime, const value_type time, const value_type direction,
-                                         CIntegrator<T, N>* integrator) const;
-        inline const value_type NextTime(point_type& p, const value_type startTime, const value_type time,
-            const value_type direction, std::vector<point_type>& buffer, CIntegrator<T, N>* integrator) const;
+        const value_type NextTime(point_type& p, 
+                                  const value_type startTime, 
+                                  const value_type time, 
+                                  const value_type direction) const;
+        const value_type NextTime(point_type& p, 
+                                  const value_type startTime, 
+                                  const value_type time,
+                                  const value_type direction, 
+                                  std::vector<point_type>& buffer) const;
+        const value_type NextTime(point_type& p, 
+                                  const value_type startTime, 
+                                  const value_type time, 
+                                  const value_type direction,
+                                  CIntegrator<T, N>* integrator) const;
+        const value_type NextTime(point_type& p, 
+                                  const value_type startTime, 
+                                  const value_type time,
+                                  const value_type direction, 
+                                  std::vector<point_type>& buffer, 
+                                  CIntegrator<T, N>* integrator) const;
 
-        virtual inline const bool CheckPosition(const point_type& p) const = 0;
+        virtual const bool CheckPosition(const point_type& p) const = 0;
 
     protected:
-        virtual inline CIntegrator<T, N> *CreateIntegrator() const = 0;
+        virtual CIntegrator<T, N> *CreateIntegrator() const = 0;
     public:
-        virtual inline const value_type Scalar(const point_type& p, const value_type& time) const = 0;
-        virtual inline void GetBBox(point_type& min, point_type& max) const  = 0;
+        virtual const value_type Scalar(const point_type& p, 
+                                        const value_type& time) const = 0;
+        virtual void GetBBox(point_type& min, point_type& max) const  = 0;
 
     public:
         void SetStepSize(const value_type stepSize);
@@ -77,13 +91,13 @@ ZD::CFlow<T, N>::CFlow()
 }
 
 template<typename T, unsigned int N>
-inline const T ZD::CFlow<T, N>::NextTime(point_type& p, const value_type startTime,
-    const value_type time, const value_type direction, CIntegrator<T, N>* integrator) const
+inline const T ZD::CFlow<T, N>::
+NextTime(point_type& p, const value_type startTime, const value_type time,
+         const value_type direction, CIntegrator<T, N>* integrator) const
 {
     value_type integratedTime = 0.0;
     while (integratedTime < time) {
         if (CheckPosition(p) == false) {
-            // std::cout << "check position at " << p[0] << " " << p[1] << " " << p[2] << " failed\n";
             break;
         }
         try {
@@ -114,23 +128,27 @@ inline const T ZD::CFlow<T, N>::NextTime(point_type& p, const value_type startTi
 }
 
 template<typename T, unsigned int N>
-inline const T ZD::CFlow<T, N>::NextTime(point_type& p, const value_type startTime,
-    const value_type time, const value_type direction) const
+inline const T ZD::CFlow<T, N>::NextTime(point_type& p, 
+                                         const value_type startTime,
+                                         const value_type time, 
+                                         const value_type direction) const
 {
     CIntegrator<T, N>* intg = CreateIntegrator();
     return NextTime(p, startTime, time, direction, intg);
 }
 
 template<typename T, unsigned int N>
-inline const T ZD::CFlow<T, N>::NextTime(point_type& p, const value_type startTime,
-    const value_type time, const value_type direction, std::vector<point_type>& buffer,
-    CIntegrator<T, N>* integrator) const
+inline const T ZD::CFlow<T, N>::NextTime(point_type& p, 
+                                         const value_type startTime,
+                                         const value_type time,
+                                         const value_type direction, 
+                                         std::vector<point_type>& buffer,
+                                         CIntegrator<T, N>* integrator) const
 {
     value_type integratedTime = 0.0;
     while (integratedTime < time) {
         if (CheckPosition(p) == false)
             break;
-        //T temp = Next(p, startTime + integratedTime, time - integratedTime, direction);
         value_type temp = integrator->Next(p, startTime + integratedTime*direction, direction, this);
         integratedTime += temp;
         if (integratedTime > time) {
@@ -150,7 +168,11 @@ inline const T ZD::CFlow<T, N>::NextTime(point_type& p, const value_type startTi
 }
 
 template<typename T, unsigned int N>
-inline const T ZD::CFlow<T, N>::NextTime(point_type& p, const value_type startTime, const value_type time, const value_type direction, std::vector<point_type>& buffer) const
+inline const T ZD::CFlow<T, N>::NextTime(point_type& p, 
+                                         const value_type startTime, 
+                                         const value_type time, 
+                                         const value_type direction, 
+                                         std::vector<point_type>& buffer) const
 {
     CIntegrator<T, N> *intg = CreateIntegrator();
     return NextTime(p, startTime, time, direction, buffer, intg);

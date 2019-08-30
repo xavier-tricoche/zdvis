@@ -75,8 +75,6 @@ T ZD::CIntegratorRK4<T, N>::Next(const CPoint<T, N> &p, const T &t,
     this->m_step.m_v0 = p;
     this->m_step.m_v1 = np;
 
-    //printf("RK4: %f %f %f %f %f %f %f %f\n", k1[0], k1[1], k2[0], k2[1], k3[0], k3[1], k4[0], k4[1]);
-
     return m_stepSize;
 }
 
@@ -84,7 +82,8 @@ T ZD::CIntegratorRK4<T, N>::Next(const CPoint<T, N> &p, const T &t,
 template <typename T, unsigned int N>
 ZD::CPoint<T, N> ZD::CIntegratorRK4<T, N>::v(const T& t) const
 {
-    const T a = (t - this->m_step.m_t0) / (this->m_step.m_t1 - this->m_step.m_t0);
+    const T a = (t - this->m_step.m_t0) / 
+                (this->m_step.m_t1 - this->m_step.m_t0);
 
     return this->m_step.m_v0 * (1.0 - a) + this->m_step.m_v1 * a;
 }

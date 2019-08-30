@@ -23,10 +23,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #ifdef _OPENMP
 #include <omp.h>
+#elif defined _TBB
+#include <tbb/tbb.h>
+#include <tbb/parallel_for.h>
+#include <tbb/atomic.h>
 #endif
 
 #include <limits>
-
+#include <ctime>
 
 #include <teem/hest.h>
 
@@ -34,9 +38,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #define DATA_TYPE double
 #endif
 
-typedef ZD::CIntegratorRK45<DATA_TYPE, 2> integ_type;
+typedef DATA_TYPE                          value_type;
+typedef ZD::CIntegratorRK45<value_type, 2> integrator_type;
+typedef ZD::CPoint<value_type, 2>          point_type;
+typedef ZD::CFlow<value_type, 2>           flow_type;
 
-ZD::CFlow<DATA_TYPE, 2> *pFlow = nullptr;
+
+flow_type *pFlow = nullptr;
 
 char *pFlowName = nullptr;
 char *pResultPathname = nullptr;
@@ -44,13 +52,13 @@ char *pDataPath = nullptr;
 
 int nx, ny;
 
-DATA_TYPE startTime = 0.0;
-DATA_TYPE endTime = 0.0;
-DATA_TYPE stepSize = 0.0;
+value_type startTime = 0.0;
+value_type endTime = 0.0;
+value_type stepSize = 0.0;
 
-DATA_TYPE minx, maxx, miny, maxy;
+value_type minx, maxx, miny, maxy;
 
-DATA_TYPE deltaTime = 0.0;
+value_type deltaTime = 0.0;
 
 void Initialize(int argc, char *argv[])
 {
@@ -102,9 +110,9 @@ void Initialize(int argc, char *argv[])
 
 void SaveConfigureFile()
 {
-    DATA_TYPE d[2];
-    d[0] = (maxx - minx) / DATA_TYPE(nx - 1);
-    d[1] = (maxy - miny) / DATA_TYPE(ny - 1);
+    value_type d[2];
+    d[0] = (maxx - minx) / value_type(nx - 1);
+    d[1] = (maxy - miny) / value_type(ny - 1);
 
     FILE *fp = fopen(pResultPathname, "w");
     if (fp == NULL) {
@@ -120,29 +128,35 @@ void SaveConfigureFile()
     fclose(fp);
 }
 
+void flowmap_iteration(point_type& p, value_type t0, value_type dt, 
+                       value_type step_size, value_type dir) {
+    pFlow->NextTime(p, t0, dt, dir, 
+                    new integrator_type(step_size, dt/100.));
+}
+
 int main(int argc, char *argv[])
 {
     Initialize(argc, argv);
 
-    DATA_TYPE minTime = std::min(startTime, endTime);
-    DATA_TYPE maxTime = std::max(startTime, endTime);
+    value_type minTime = std::min(startTime, endTime);
+    value_type maxTime = std::max(startTime, endTime);
     if (strcmp(pFlowName, "double_gyre") == 0) {
-        pFlow = new ZD::CFlowDoubleGyre<DATA_TYPE>();
+        pFlow = new ZD::CFlowDoubleGyre<value_type>();
     }
     else if (strcmp(pFlowName, "steady_double_gyre") == 0) {
-        pFlow = new ZD::CFlowSteadyDoubleGyre<DATA_TYPE>();
+        pFlow = new ZD::CFlowSteadyDoubleGyre<value_type>();
     }
     else if (strcmp(pFlowName, "meandering_jet") == 0) {
-        pFlow = new ZD::CFlowMeanderingJet<DATA_TYPE>();
+        pFlow = new ZD::CFlowMeanderingJet<value_type>();
     }
     else if (strcmp(pFlowName, "convection") == 0) {
-        pFlow = new ZD::CFlowConvection<DATA_TYPE>(minTime, maxTime, true);
+        pFlow = new ZD::CFlowConvection<value_type>(minTime, maxTime, true);
     }
     else if (strcmp(pFlowName, "boussinesq") == 0) {
-        pFlow = new ZD::CFlowBoussinesq<DATA_TYPE>(minTime, maxTime);
+        pFlow = new ZD::CFlowBoussinesq<value_type>(minTime, maxTime);
     }
     else if (strcmp(pFlowName, "gaussian_vortices") == 0) {
-        pFlow = new ZD::CFlowGaussianVortices<DATA_TYPE>(minTime, maxTime);
+        pFlow = new ZD::CFlowGaussianVortices<value_type>(minTime, maxTime);
     }
     else {
         std::cerr << "Unknown 2D flow name: " << pFlowName << std::endl;
@@ -155,7 +169,7 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    ZD::CPoint<DATA_TYPE, 2> bbox[2];
+    point_type bbox[2];
     pFlow->GetBBox(bbox[0], bbox[1]);
     minx = std::isnan(minx) ? bbox[0][0] : minx;
     miny = std::isnan(miny) ? bbox[0][1] : miny;
@@ -165,62 +179,96 @@ int main(int argc, char *argv[])
 
     SaveConfigureFile();
 
-#ifdef _OPENMP
-    omp_set_num_threads(OMP_MAX_THREADS);
-#endif
-
-    ZD::CPoint<DATA_TYPE, 2> *particles = new ZD::CPoint<DATA_TYPE, 2>[nx*ny];
+    point_type *particles = new point_type[nx*ny];
 
     // initialize seeding position
-    DATA_TYPE d[2];
-    d[0] = (maxx - minx) / DATA_TYPE(nx - 1);
-    d[1] = (maxy - miny) / DATA_TYPE(ny - 1);
+    value_type d[2];
+    d[0] = (maxx - minx) / value_type(nx - 1);
+    d[1] = (maxy - miny) / value_type(ny - 1);
     for (int y = 0; y < ny; ++y) {
         for (int x = 0; x < nx; ++x) {
-            particles[y*nx+x] = ZD::CPoint<DATA_TYPE, 2>(minx + d[0] * x, miny + d[1] * y);
+            particles[y*nx+x] = point_type(minx + d[0] * x, miny + d[1] * y);
         }
     }
 
     // compute flow map
     pFlow->SetStepSize(stepSize);
-    DATA_TYPE direction = endTime > startTime ? 1.0 : -1.0;
-    DATA_TYPE remainTime = std::abs(endTime - startTime);
-    DATA_TYPE integratedTime = 0.0;
+    value_type direction = endTime > startTime ? 1.0 : -1.0;
+    value_type remainTime = std::abs(endTime - startTime);
+    value_type integratedTime = 0.0;
+    size_t step=0;
     while (remainTime > 0.0) {
-        DATA_TYPE currentStartTime = startTime + direction * integratedTime;
+        ++step;
+        std::cout << "\ncurrently computing step #" << step << ". " << remainTime << " s. remaining\n";
+        
+        value_type currentStartTime = startTime + direction * integratedTime;
 
+        std::clock_t start_time = std::clock();
 #ifdef _OPENMP
+        int last_prec = 0;
         omp_set_num_threads(OMP_MAX_THREADS);
         int thread_count[OMP_MAX_THREADS];
         memset(thread_count, 0, sizeof(int)*OMP_MAX_THREADS);
-        int last_prec = 0;
-#endif
-
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic, 1)
-#endif
-        for (int i = 0; i < nx*ny; ++i) {
-
-            // std::cout << "integrating particle #" << i << '\n';
-
-            pFlow->NextTime(particles[i], currentStartTime, deltaTime, direction,
-                            new integ_type(stepSize, deltaTime/100.));
-
-#ifdef _OPENMP
+        
+        #pragma omp parallel for schedule(dynamic, 1)
+        for (int i=0; i<nx*ny; ++i) {
             int threadID = omp_get_thread_num();
             thread_count[threadID]++;
+            flowmap_iteration(particles[i], currentStartTime, deltaTime, 
+                              stepSize, direction);
+            
             if (threadID == 0) {
                 int total = 0;
                 for (int id = 0; id < OMP_MAX_THREADS; ++id)
                     total += thread_count[id];
+                ++nb_done;
+                int total = nb_done;
                 int prec = int(10000.0 * (double)total / double(nx*ny));
+                
                 if (prec > last_prec) {
-                    printf("\r(%d / %d) pathlines finished.", total, nx*ny);
+                    printf("\r(%d / %d) pathlines completed.", total, nx*ny);
                     last_prec = prec;
                 }
             }
-#endif
         }
+#elif defined _TBB
+        tbb::atomic<int> tbb_progress_counter = 0;
+        tbb::atomic<int> tbb_last_done=0;
+        int stride = nx*ny/100;
+        
+        std::cout << "Running flow map computation with TBB\n";
+    
+        tbb::parallel_for(tbb::blocked_range<int>(0,nx*ny),
+                           [&](tbb::blocked_range<int> r) {
+            for (int i=r.begin(); i!=r.end(); ++i) {
+                int ndone = tbb_progress_counter++;
+                flowmap_iteration(particles[i], currentStartTime, deltaTime, 
+                                  stepSize, direction);
+                int last_done = tbb_last_done;
+                if (true || ndone == last_done + stride) {
+                    printf("\r(%d / %d) pathlines completed.", ndone, nx*ny);
+                    tbb_last_done.fetch_and_store(ndone);
+                }
+            }
+        });
+#else
+        int ndone = 0;
+        int last_prec = 0;
+        for (int i=0; i<nx*ny; ++i) {
+            flowmap_iteration(particles[i], currentStartTime, deltaTime, 
+                              stepSize, direction);
+            int prec = int(10000.0 * (double)++ndone / double(nx*ny));
+                
+            if (prec > last_prec) {
+                printf("\r(%d / %d) pathlines completed.", ndone, nx*ny);
+                last_prec = prec;
+            }
+        }
+#endif
+        std::clock_t end_time = std::clock();
+        auto elapsed = (end_time-start_time)/CLOCKS_PER_SEC;
+        std::cout << "time: " << elapsed
+            << " (" << (double)(nx*ny)/(double)elapsed << " Hz)\n";
 
         integratedTime += deltaTime;
         remainTime -= deltaTime;
@@ -229,7 +277,7 @@ int main(int argc, char *argv[])
         std::string temp = ZD::CFileTool::GetFilePath(pResultPathname);
         char pathname[ZD_PATHNAME_LENGTH];
         sprintf(pathname, "%sflowmap_dt=%09.04f.nrrd", temp.c_str(), integratedTime*direction);
-        ZD::CField2<DATA_TYPE, 2> *pFlowMap = new ZD::CField2<DATA_TYPE, 2>();
+        ZD::CField2<value_type, 2> *pFlowMap = new ZD::CField2<value_type, 2>();
         pFlowMap->CreateField(nx, ny, particles);
         pFlowMap->SaveNrrdFile(pathname);
         SafeDelete(pFlowMap);
