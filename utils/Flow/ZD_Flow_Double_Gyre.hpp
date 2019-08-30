@@ -18,13 +18,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 **************************************************************************/
-
 #ifndef _ZD_LIB_FLOW_DOUBLE_GYRE_HPP_
 #define _ZD_LIB_FLOW_DOUBLE_GYRE_HPP_
 
 #include "ZD_Flow.hpp"
 #include "utils/define.hpp"
-#include "utils/Integrator/ZD_Integrator_RKDP45.hpp"
+#include "utils/Integrator/ZD_Integrator_RK4.hpp"
 
 #include <math.h>
 
